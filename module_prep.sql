@@ -403,9 +403,138 @@ from employees e
 where e.salary > 
 (select avg(e2.salary) from employees e2);
 
+select first_name,last_name,salary,dept_id
+from employees 
+order by salary desc;
+
+select first_name,last_name,salary 
+from employees 
+where salary =
+(select max(salary)
+from employees);
+
+with cte as 
+(
+select first_name,last_name,salary
+from employees
+order by salary desc
+)select * from cte;
+
+with cte as
+(select first_name,last_name,salary,
+dense_rank() over(order by salary desc) as rnk
+from employees
+)
+select * from cte
+where rnk = 1;
+
+select * from employees
+where salary < (select max(salary)
+from employees)
+limit 2;
+
+with cte as
+(
+select concat(first_name," ",last_name) as name
+,salary,dense_rank() over(order by salary desc) as rnk from employees
+) select * from cte
+where rnk = 2;
+
+select distinct salary 
+from employees 
+order by salary desc
+limit 1 offset 1;
+
+select first_name,last_name,salary 
+from employees
+where salary >
+(select salary
+ from employees
+ group by dept_id);
+
+select e.first_name,e.last_name,e.salary
+from employees e
+where e.salary > 
+(select avg(e2.salary)
+from employees e2
+where e.dept_id = e2.dept_id);
+
+select e.dept_id,e.first_name,e.last_name,e.salary
+from employees e 
+where e.salary >
+(select avg(e2.salary) 
+from employees e2
+where e.dept_id = e2.dept_id
+);
+
+with cte as 
+(
+select first_name,last_name,salary,
+avg(salary) over(partition by dept_id) as dpt_avg
+from employees
+)select * from cte
+where salary > dpt_avg;
+
+with cte as
+(
+select dept_id,first_name,last_name,salary ,
+row_number() over( order by salary desc) as sal
+from employees
+)
+select * from cte;
 
 
+with cte as
+(
+select dept_id,first_name,last_name,salary ,
+dense_rank() over(partition by dept_id order by salary desc) as sal
+from employees
+)
+select * from cte;
 
+with cte as 
+(select first_name,last_name,salary, 
+avg(salary) over(partition by dept_id ) as rnk
+from employees)
+select * from cte;
+
+select e.first_name,e.last_name,e.salary,d.avg_sal as dpt_avg
+from employees e
+join (select dept_id,avg(salary) as avg_sal
+from employees group by dept_id) as d
+on e.dept_id = e.dept_id;
+
+ select e.first_name,e.last_name,e.salary,
+ (select avg(e2.salary)
+ from employees e2
+ where e.dept_id = e2.dept_id) as d
+from employees e; 
+
+with cte as 
+(select first_name,last_name,salary ,
+dense_rank() over(partition by dept_id order by salary desc) as sal
+from employees)
+select * from cte 
+where sal <=3;
+
+with cte as 
+(select first_name,last_name,salary ,
+dense_rank() over(partition by dept_id order by salary asc) as sal
+from employees)
+select * from cte 
+where sal =1;
+
+with cte as 
+(
+select o.customer_id,sum(oi.quantity * oi.unit_price) as tot_spend
+from orders o 
+inner join order_items oi
+on o.order_id =oi.order_id
+group by o.customer_id
+order by tot_spend desc
+limit 5
+)
+select * from cte;
 
 -----------------------------------------------------------------------------------------------
 use sql_master_db;
